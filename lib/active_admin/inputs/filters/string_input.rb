@@ -19,6 +19,9 @@ module ActiveAdmin
             super # SearchMethodSelect#to_html
           end
         end
+        def input_html_options
+          super.merge(class: 'form-control')
+        end
 
       end
     end

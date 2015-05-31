@@ -1,4 +1,10 @@
-# Provides an intuitive way to build has_many associated records in the same form.
+# Note for posterity:
+#
+# Here we have two core customizations on top of Formtastic. First, this allows
+# you to build forms in the AA DSL without dealing with the HTML return value of
+# individual form methods (hence the +form_buffers+ object). Second, this provides
+# an intuitive way to build has_many associated records in the same form.
+#
 module Formtastic
   module Inputs
     module Base
@@ -12,13 +18,19 @@ module Formtastic
 end
 
 module ActiveAdmin
-  class FormBuilder < ::Formtastic::FormBuilder
-    self.input_namespaces = [::Object, ::ActiveAdmin::Inputs, ::Formtastic::Inputs]
+  class FormBuilder < ::FormtasticBootstrap::FormBuilder
 
-    # TODO: remove both class finders after formtastic 4 (where it will be default)
-    self.input_class_finder = ::Formtastic::InputClassFinder
-    self.action_class_finder = ::Formtastic::ActionClassFinder
+    attr_reader :form_buffers
 
+    def initialize(*args)
+      @form_buffers = ["".html_safe]
+      super
+    end
+
+    def inputs(*args, &block)
+      @use_form_buffer = block_given?
+      form_buffers.last << with_new_form_buffer{ super }
+    end
     def cancel_link(url = {action: "index"}, html_options = {}, li_attrs = {})
       li_attrs[:class] ||= "cancel"
       li_content = template.link_to I18n.t('active_admin.cancel'), url, html_options
